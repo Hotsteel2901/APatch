@@ -25,23 +25,17 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBarScrollBehavior
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,6 +49,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -66,6 +62,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.compose.ui.window.PopupProperties
@@ -88,10 +85,15 @@ import me.bmax.apatch.ui.component.ConfirmResult
 import me.bmax.apatch.ui.component.KPModuleRemoveButton
 import me.bmax.apatch.ui.component.LoadingDialogHandle
 import me.bmax.apatch.ui.component.ProvideMenuShape
-import me.bmax.apatch.ui.component.SearchAppBar
 import me.bmax.apatch.ui.component.pinnedScrollBehavior
 import me.bmax.apatch.ui.component.rememberConfirmDialog
 import me.bmax.apatch.ui.component.rememberLoadingDialog
+import me.bmax.apatch.ui.theme.Win98Button
+import me.bmax.apatch.ui.theme.Win98Colors
+import me.bmax.apatch.ui.theme.Win98TitleBar
+import me.bmax.apatch.ui.theme.win98Divider
+import me.bmax.apatch.ui.theme.win98InsetBorder
+import me.bmax.apatch.ui.theme.win98OutsetBorder
 import me.bmax.apatch.ui.viewmodel.KPModel
 import me.bmax.apatch.ui.viewmodel.KPModuleViewModel
 import me.bmax.apatch.ui.viewmodel.PatchesViewModel
@@ -119,7 +121,8 @@ fun KPModuleScreen(navigator: DestinationsNavigator) {
             Row {
                 Text(
                     text = stringResource(id = R.string.kpm_kp_not_installed),
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Win98Colors.WindowText
                 )
             }
         }
@@ -137,11 +140,7 @@ fun KPModuleScreen(navigator: DestinationsNavigator) {
     }
 
     Scaffold(topBar = {
-        SearchAppBar(
-            searchText = viewModel.search,
-            onSearchTextChange = { viewModel.search = it },
-            searchBarPlaceHolderText = stringResource(R.string.search_modules)
-        )
+        Win98TitleBar(title = stringResource(id = R.string.kpm))
     }, floatingActionButton = run {
         {
             val scope = rememberCoroutineScope()
@@ -195,12 +194,10 @@ fun KPModuleScreen(navigator: DestinationsNavigator) {
             val options = listOf(moduleEmbed, moduleInstall, moduleLoad)
 
             Column {
-                FloatingActionButton(
+                Win98Button(
                     onClick = {
                         expanded = !expanded
                     },
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    containerColor = MaterialTheme.colorScheme.primary,
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.package_import),
@@ -208,7 +205,7 @@ fun KPModuleScreen(navigator: DestinationsNavigator) {
                     )
                 }
 
-                ProvideMenuShape(RoundedCornerShape(10.dp)) {
+                ProvideMenuShape(RoundedCornerShape(0.dp)) {
                     DropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
@@ -251,7 +248,8 @@ fun KPModuleScreen(navigator: DestinationsNavigator) {
             modules = viewModel.moduleList,
             modifier = Modifier
                 .padding(innerPadding)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .drawBehind { drawRect(Win98Colors.Background) },
             state = kpModuleListState,
             scrollBehavior = scrollBehavior
         )
@@ -326,26 +324,15 @@ fun KPMControlDialog(showDialog: MutableState<Boolean>) {
             usePlatformDefaultWidth = false,
         )
     ) {
-        Surface(
+        Column(
             modifier = Modifier
                 .width(310.dp)
-                .wrapContentHeight(),
-            shape = RoundedCornerShape(30.dp),
-            tonalElevation = AlertDialogDefaults.TonalElevation,
-            color = AlertDialogDefaults.containerColor,
+                .wrapContentHeight()
+                .win98OutsetBorder(borderWidth = 2.dp)
+                .drawBehind { drawRect(Win98Colors.Background) }
         ) {
+            Win98TitleBar(title = stringResource(id = R.string.kpm_control_dialog_title))
             Column(modifier = Modifier.padding(PaddingValues(all = 24.dp))) {
-                Box(
-                    Modifier
-                        .padding(PaddingValues(bottom = 16.dp))
-                        .align(Alignment.Start)
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.kpm_control_dialog_title),
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                }
-
                 Box(
                     Modifier
                         .weight(weight = 1f, fill = false)
@@ -369,7 +356,7 @@ fun KPMControlDialog(showDialog: MutableState<Boolean>) {
                             controlParam = it
                             enable = controlParam.isNotBlank()
                         },
-                        shape = RoundedCornerShape(50.0f),
+                        shape = RectangleShape,
                         label = { Text(stringResource(id = R.string.kpm_control_paramters)) },
                         visualTransformation = VisualTransformation.None,
                     )
@@ -379,17 +366,17 @@ fun KPMControlDialog(showDialog: MutableState<Boolean>) {
                 Row(
                     modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End
                 ) {
-                    TextButton(onClick = { showDialog.value = false }) {
-                        Text(stringResource(id = android.R.string.cancel))
+                    Win98Button(onClick = { showDialog.value = false }) {
+                        Text(stringResource(id = android.R.string.cancel), fontSize = 12.sp)
                     }
 
-                    Button(onClick = {
+                    Win98Button(onClick = {
                         showDialog.value = false
 
                         scope.launch { onModuleControl(targetKPMToControl) }
 
                     }, enabled = enable) {
-                        Text(stringResource(id = android.R.string.ok))
+                        Text(stringResource(id = android.R.string.ok), fontSize = 12.sp)
                     }
                 }
             }
@@ -510,11 +497,10 @@ private fun KPModuleItem(
     val moduleArgs = stringResource(id = R.string.kpm_args)
     val decoration = TextDecoration.None
 
-    Surface(
-        modifier = modifier,
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
-        shape = RoundedCornerShape(20.dp)
+    Column(
+        modifier = modifier
+            .win98OutsetBorder(borderWidth = 1.dp)
+            .drawBehind { drawRect(Win98Colors.Background) }
     ) {
 
         Box(
@@ -535,7 +521,7 @@ private fun KPModuleItem(
                     ) {
                         Text(
                             text = module.name,
-                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                            style = MaterialTheme.typography.titleSmall,
                             maxLines = 2,
                             textDecoration = decoration,
                             overflow = TextOverflow.Ellipsis
@@ -545,14 +531,14 @@ private fun KPModuleItem(
                             text = "${module.version}, $moduleAuthor ${module.author}",
                             style = MaterialTheme.typography.bodySmall,
                             textDecoration = decoration,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Win98Colors.GrayText
                         )
 
                         Text(
                             text = "$moduleArgs: ${module.args}",
                             style = MaterialTheme.typography.bodySmall,
                             textDecoration = decoration,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = Win98Colors.GrayText
                         )
                     }
 
@@ -565,12 +551,12 @@ private fun KPModuleItem(
                     text = module.description,
                     style = MaterialTheme.typography.bodySmall,
                     textDecoration = decoration,
-                    color = MaterialTheme.colorScheme.outline
+                    color = Win98Colors.GrayText
                 )
 
                 HorizontalDivider(
                     thickness = 1.5.dp,
-                    color = MaterialTheme.colorScheme.surface,
+                    color = Win98Colors.Background,
                     modifier = Modifier.padding(top = 8.dp)
                 )
 
@@ -582,10 +568,9 @@ private fun KPModuleItem(
                 ) {
                     Spacer(modifier = Modifier.weight(1f))
 
-                    FilledTonalButton(
+                    Win98Button(
                         onClick = { onControl(module) },
                         enabled = true,
-                        contentPadding = PaddingValues(12.dp)
                     ) {
                         Icon(
                             modifier = Modifier.size(20.dp),

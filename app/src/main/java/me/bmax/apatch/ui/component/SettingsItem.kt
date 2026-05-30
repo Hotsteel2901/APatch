@@ -7,16 +7,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -24,8 +22,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import me.bmax.apatch.ui.theme.Win98Colors
+import me.bmax.apatch.ui.theme.win98InsetBorder
 
 @Composable
 fun SwitchItem(
@@ -41,7 +42,7 @@ fun SwitchItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 72.dp)
+            .height(48.dp)
             .toggleable(
                 value = checked,
                 interactionSource = interactionSource,
@@ -50,21 +51,19 @@ fun SwitchItem(
                 indication = LocalIndication.current,
                 onValueChange = onCheckedChange
             )
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Leading Icon
         if (icon != null) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(24.dp),
-                tint = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                modifier = Modifier.size(20.dp),
+                tint = if (enabled) Win98Colors.WindowText else Win98Colors.GrayText
             )
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(12.dp))
         }
 
-        // Text Content
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.Center
@@ -72,26 +71,36 @@ fun SwitchItem(
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                fontWeight = FontWeight.Bold,
+                color = if (enabled) Win98Colors.WindowText else Win98Colors.GrayText
             )
             if (summary != null) {
                 Text(
                     text = summary,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.outline
+                    color = Win98Colors.GrayText
                 )
             }
         }
 
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(12.dp))
 
-        // Trailing Switch
-        Switch(
-            checked = checked,
-            onCheckedChange = null,
-            enabled = enabled,
-            interactionSource = interactionSource
-        )
+        Column(
+            modifier = Modifier
+                .win98InsetBorder(borderWidth = 1.dp)
+                .size(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (checked) {
+                Text(
+                    text = "\u2713",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (enabled) Win98Colors.WindowText else Win98Colors.GrayText
+                )
+            }
+        }
     }
 }
 
@@ -101,12 +110,14 @@ fun RadioItem(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    ListItem(
-        headlineContent = {
-            Text(title)
-        },
-        leadingContent = {
-            RadioButton(selected = selected, onClick = onClick)
-        },
-    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(selected = selected, onClick = onClick)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(title, color = Win98Colors.WindowText, fontSize = 12.sp)
+    }
 }

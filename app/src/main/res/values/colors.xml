@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="win98_background">#C0C0C0</color>
+    <color name="win98_titlebar">#000080</color>
+    <color name="win98_silver">#C0C0C0</color>
+    <color name="ic_launcher_background">#000080</color>
+</resources>
