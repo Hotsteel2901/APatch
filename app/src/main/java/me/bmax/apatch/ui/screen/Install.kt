@@ -18,17 +18,13 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,15 +33,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
@@ -57,6 +56,9 @@ import kotlinx.coroutines.withContext
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.component.KeyEventBlocker
 import me.bmax.apatch.ui.component.rememberCustomDialog
+import me.bmax.apatch.ui.theme.Win98Button
+import me.bmax.apatch.ui.theme.Win98Colors
+import me.bmax.apatch.ui.theme.win98OutsetBorder
 import me.bmax.apatch.util.hasMetaModule
 import me.bmax.apatch.util.installModule
 import me.bmax.apatch.util.reboot
@@ -99,15 +101,15 @@ fun InstallScreen(navigator: DestinationsNavigator, uri: Uri, type: MODULE_TYPE)
                 Text(text = stringResource(R.string.warning_of_meta_module_summary))
             },
             confirmButton = {
-                FilledTonalButton(onClick = { dismiss() }) {
-                    Text(text = stringResource(id = android.R.string.ok))
+                Win98Button(onClick = { dismiss() }) {
+                    Text(text = stringResource(id = android.R.string.ok), fontSize = 12.sp)
                 }
             },
             dismissButton = {
-                OutlinedButton(onClick = {
+                Win98Button(onClick = {
                     uriHandler.openUri("https://apatch.dev/meta-module.html")
                 }) {
-                    Text(text = stringResource(id = R.string.learn_more))
+                    Text(text = stringResource(id = R.string.learn_more), fontSize = 12.sp)
                 }
             },
         )
@@ -129,7 +131,6 @@ fun InstallScreen(navigator: DestinationsNavigator, uri: Uri, type: MODULE_TYPE)
                 scope.launch {
                     showFloatAction = true
 
-                    // check metamodule
                     if (hasMetaModule()) return@launch
                     val mountOldDirectory =
                         SuFile.open("/data/adb/modules/${getModuleIdFromUri(context, uri)}/system")
@@ -142,7 +143,7 @@ fun InstallScreen(navigator: DestinationsNavigator, uri: Uri, type: MODULE_TYPE)
 
             }, onStdout = {
                 tempText = "$it\n"
-                if (tempText.startsWith("[H[J")) { // clear command
+                if (tempText.startsWith("[H[J")) {
                     text = tempText.substring(6)
                 } else {
                     text += tempText
@@ -150,7 +151,7 @@ fun InstallScreen(navigator: DestinationsNavigator, uri: Uri, type: MODULE_TYPE)
                 logContent.append(it).append("\n")
             }, onStderr = {
                 tempText = "$it\n"
-                if (tempText.startsWith("[H[J")) { // clear command
+                if (tempText.startsWith("[H[J")) {
                     text = tempText.substring(6)
                 } else {
                     text += tempText
@@ -199,6 +200,7 @@ fun InstallScreen(navigator: DestinationsNavigator, uri: Uri, type: MODULE_TYPE)
             modifier = Modifier
                 .fillMaxSize(1f)
                 .padding(innerPadding)
+                .drawBehind { drawRect(Win98Colors.Background) }
                 .verticalScroll(scrollState),
         ) {
             LaunchedEffect(text) {
@@ -210,6 +212,7 @@ fun InstallScreen(navigator: DestinationsNavigator, uri: Uri, type: MODULE_TYPE)
                 fontSize = MaterialTheme.typography.bodySmall.fontSize,
                 fontFamily = FontFamily.Monospace,
                 lineHeight = MaterialTheme.typography.bodySmall.lineHeight,
+                color = Win98Colors.WindowText
             )
         }
     }
@@ -263,24 +266,36 @@ suspend fun getModuleIdFromUri(context: Context, uri: Uri): String? {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TopBar(onBack: () -> Unit = {}, onSave: () -> Unit = {}) {
-    TopAppBar(title = { Text(stringResource(R.string.apm_install)) }, navigationIcon = {
-        IconButton(
-            onClick = onBack
-        ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
-    }, actions = {
-        IconButton(onClick = onSave) {
-            Icon(
-                imageVector = Icons.Filled.Save, contentDescription = "Localized description"
+    Column(modifier = Modifier.drawBehind { drawRect(Win98Colors.TitleBar) }) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.apm_install),
+                color = Win98Colors.TitleBarText,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
             )
+            IconButton(onClick = onBack) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = null,
+                    tint = Win98Colors.TitleBarText
+                )
+            }
+            IconButton(onClick = onSave) {
+                Icon(
+                    imageVector = Icons.Filled.Save,
+                    contentDescription = "Save log",
+                    tint = Win98Colors.TitleBarText
+                )
+            }
         }
-    })
-}
-
-@Preview
-@Composable
-fun InstallPreview() {
-//    InstallScreen(DestinationsNavigator(), uri = Uri.EMPTY)
+    }
 }

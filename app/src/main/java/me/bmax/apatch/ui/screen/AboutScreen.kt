@@ -12,36 +12,37 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.R
+import me.bmax.apatch.ui.theme.Win98Button
+import me.bmax.apatch.ui.theme.Win98Colors
+import me.bmax.apatch.ui.theme.win98OutsetBorder
 import me.bmax.apatch.util.Version
 
 @Destination<RootGraph>
@@ -58,6 +59,7 @@ fun AboutScreen(navigator: DestinationsNavigator) {
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxWidth()
+                .drawBehind { drawRect(Win98Colors.Background) }
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -77,7 +79,8 @@ fun AboutScreen(navigator: DestinationsNavigator) {
             Spacer(modifier = Modifier.height(20.dp))
             Text(
                 text = stringResource(id = R.string.app_name),
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleLarge,
+                color = Win98Colors.WindowText
             )
             Text(
                 text = stringResource(
@@ -85,7 +88,7 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                     if (BuildConfig.VERSION_NAME.contains(BuildConfig.VERSION_CODE.toString())) "${BuildConfig.VERSION_CODE}" else "${BuildConfig.VERSION_CODE} (${BuildConfig.VERSION_NAME})"
                 ),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = Win98Colors.GrayText,
                 modifier = Modifier.padding(top = 5.dp)
             )
             Text(
@@ -95,7 +98,7 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                     "KernelPatch (${Version.buildKPVString()})"
                 ),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = Win98Colors.GrayText,
                 modifier = Modifier.padding(top = 5.dp)
             )
 
@@ -106,26 +109,26 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FilledTonalButton(
+                Win98Button(
                     onClick = { uriHandler.openUri("https://github.com/bmax121/APatch") }
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.github),
                         contentDescription = null
                     )
-                    Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
-                    Text(text = stringResource(id = R.string.about_github))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(text = stringResource(id = R.string.about_github), fontSize = 12.sp)
                 }
 
-                FilledTonalButton(
+                Win98Button(
                     onClick = { uriHandler.openUri("https://t.me/APatchChannel") }
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.telegram),
                         contentDescription = null
                     )
-                    Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
-                    Text(text = stringResource(id = R.string.about_telegram_channel))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(text = stringResource(id = R.string.about_telegram_channel), fontSize = 12.sp)
                 }
             }
 
@@ -134,33 +137,36 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FilledTonalButton(
+                Win98Button(
                     onClick = { uriHandler.openUri("https://hosted.weblate.org/engage/APatch") }
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.weblate),
                         contentDescription = null,
-                        modifier = Modifier.size(ButtonDefaults.IconSize)
+                        modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
-                    Text(text = stringResource(id = R.string.about_weblate))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(text = stringResource(id = R.string.about_weblate), fontSize = 12.sp)
                 }
 
-                FilledTonalButton(
+                Win98Button(
                     onClick = { uriHandler.openUri("https://t.me/apatch_discuss") }
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.telegram),
                         contentDescription = null
                     )
-                    Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
-                    Text(text = stringResource(id = R.string.about_telegram_group))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(text = stringResource(id = R.string.about_telegram_group), fontSize = 12.sp)
                 }
             }
 
-            OutlinedCard(
-                modifier = Modifier.padding(vertical = 30.dp, horizontal = 20.dp),
-                shape = RoundedCornerShape(15.dp)
+            Column(
+                modifier = Modifier
+                    .padding(vertical = 30.dp, horizontal = 20.dp)
+                    .fillMaxWidth()
+                    .win98OutsetBorder(borderWidth = 1.dp)
+                    .drawBehind { drawRect(Win98Colors.Background) }
             ) {
                 Column(
                     modifier = Modifier
@@ -170,7 +176,7 @@ fun AboutScreen(navigator: DestinationsNavigator) {
                     Text(
                         text = stringResource(id = R.string.about_app_desc),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = Win98Colors.GrayText
                     )
                 }
             }
@@ -179,15 +185,29 @@ fun AboutScreen(navigator: DestinationsNavigator) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TopBar(onBack: () -> Unit = {}) {
-    TopAppBar(
-        title = { Text(stringResource(R.string.about)) },
-        navigationIcon = {
-            IconButton(
-                onClick = onBack
-            ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
-        },
-    )
+    Column(modifier = Modifier.drawBehind { drawRect(Win98Colors.TitleBar) }) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.about),
+                color = Win98Colors.TitleBarText,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(onClick = onBack) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = null,
+                    tint = Win98Colors.TitleBarText
+                )
+            }
+        }
+    }
 }

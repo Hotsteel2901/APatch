@@ -14,14 +14,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,8 +27,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
@@ -39,6 +40,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.component.WarningCard
 import me.bmax.apatch.ui.component.rememberConfirmDialog
+import me.bmax.apatch.ui.theme.Win98Colors
 import me.bmax.apatch.ui.viewmodel.PatchesViewModel
 import me.bmax.apatch.util.isABDevice
 import me.bmax.apatch.util.rootAvailable
@@ -57,7 +59,7 @@ fun InstallModeSelectScreen(navigator: DestinationsNavigator) {
             onBack = dropUnlessResumed { navigator.popBackStack() },
         )
     }) {
-        Column(modifier = Modifier.padding(it)) {
+        Column(modifier = Modifier.padding(it).drawBehind { drawRect(Win98Colors.Background) }) {
             SelectInstallMethod(
                 onSelected = { method ->
                     installMethod = method
@@ -132,7 +134,6 @@ private fun SelectInstallMethod(
     val onClick = { option: InstallMethod ->
         when (option) {
             is InstallMethod.SelectFile -> {
-                // Reset before selecting
                 selectedBootImage = null
                 selectImageLauncher.launch(
                     Intent(Intent.ACTION_GET_CONTENT).apply {
@@ -158,7 +159,7 @@ private fun SelectInstallMethod(
             Box(Modifier.padding(12.dp)) {
                 WarningCard(
                     message = stringResource(R.string.home_install_unknown_summary),
-                    color = MaterialTheme.colorScheme.outlineVariant,
+                    color = Win98Colors.GrayText,
                 )
             }
         }
@@ -178,14 +179,16 @@ private fun SelectInstallMethod(
                         text = stringResource(id = option.label),
                         fontSize = MaterialTheme.typography.titleMedium.fontSize,
                         fontFamily = MaterialTheme.typography.titleMedium.fontFamily,
-                        fontStyle = MaterialTheme.typography.titleMedium.fontStyle
+                        fontStyle = MaterialTheme.typography.titleMedium.fontStyle,
+                        color = Win98Colors.WindowText
                     )
                     option.summary?.let {
                         Text(
                             text = it,
                             fontSize = MaterialTheme.typography.bodySmall.fontSize,
                             fontFamily = MaterialTheme.typography.bodySmall.fontFamily,
-                            fontStyle = MaterialTheme.typography.bodySmall.fontStyle
+                            fontStyle = MaterialTheme.typography.bodySmall.fontStyle,
+                            color = Win98Colors.GrayText
                         )
                     }
                 }
@@ -194,15 +197,29 @@ private fun SelectInstallMethod(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TopBar(onBack: () -> Unit = {}) {
-    TopAppBar(
-        title = { Text(stringResource(R.string.mode_select_page_title)) },
-        navigationIcon = {
-            IconButton(
-                onClick = onBack
-            ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) }
-        },
-    )
+    Column(modifier = Modifier.drawBehind { drawRect(Win98Colors.TitleBar) }) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.mode_select_page_title),
+                color = Win98Colors.TitleBarText,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(onClick = onBack) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = null,
+                    tint = Win98Colors.TitleBarText
+                )
+            }
+        }
+    }
 }

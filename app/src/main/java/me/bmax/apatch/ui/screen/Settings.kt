@@ -8,51 +8,49 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Commit
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeveloperMode
 import androidx.compose.material.icons.filled.Engineering
-import androidx.compose.material.icons.filled.FormatColorFill
 import androidx.compose.material.icons.filled.InvertColors
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Update
-import androidx.compose.material3.AlertDialogDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BasicAlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -64,14 +62,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.content.FileProvider
@@ -86,8 +90,13 @@ import me.bmax.apatch.APApplication
 import me.bmax.apatch.BuildConfig
 import me.bmax.apatch.Natives
 import me.bmax.apatch.R
-import me.bmax.apatch.ui.component.SwitchItem
 import me.bmax.apatch.ui.component.rememberLoadingDialog
+import me.bmax.apatch.ui.theme.Win98Button
+import me.bmax.apatch.ui.theme.Win98Colors
+import me.bmax.apatch.ui.theme.Win98TitleBar
+import me.bmax.apatch.ui.theme.win98Divider
+import me.bmax.apatch.ui.theme.win98InsetBorder
+import me.bmax.apatch.ui.theme.win98OutsetBorder
 import me.bmax.apatch.ui.theme.refreshTheme
 import me.bmax.apatch.util.getBugreportFile
 import me.bmax.apatch.util.isGlobalNamespaceEnabled
@@ -120,9 +129,7 @@ fun SettingScreen() {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.settings)) },
-            )
+            Win98TitleBar(title = stringResource(R.string.settings))
         },
         snackbarHost = { SnackbarHost(snackBarHost) }
     ) { paddingValues ->
@@ -135,11 +142,6 @@ fun SettingScreen() {
         val showResetSuPathDialog = remember { mutableStateOf(false) }
         if (showResetSuPathDialog.value) {
             ResetSUPathDialog(showResetSuPathDialog)
-        }
-
-        val showThemeChooseDialog = remember { mutableStateOf(false) }
-        if (showThemeChooseDialog.value) {
-            ThemeChooseDialog(showThemeChooseDialog)
         }
 
         var showLogBottomSheet by remember { mutableStateOf(false) }
@@ -169,16 +171,16 @@ fun SettingScreen() {
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .drawBehind { drawRect(Win98Colors.Background) },
         ) {
 
             val context = LocalContext.current
             val scope = rememberCoroutineScope()
             val prefs = APApplication.sharedPreferences
 
-            // Global mount
             if (kPatchReady && aPatchReady) {
-                SwitchItem(
+                Win98SwitchItem(
                     icon = Icons.Filled.Engineering,
                     title = stringResource(id = R.string.settings_global_namespace_mode),
                     summary = stringResource(id = R.string.settings_global_namespace_mode_summary),
@@ -195,14 +197,13 @@ fun SettingScreen() {
                     })
             }
 
-            // WebView Debug
             if (aPatchReady) {
                 var enableWebDebugging by rememberSaveable {
                     mutableStateOf(
                         prefs.getBoolean("enable_web_debugging", false)
                     )
                 }
-                SwitchItem(
+                Win98SwitchItem(
                     icon = Icons.Filled.DeveloperMode,
                     title = stringResource(id = R.string.enable_web_debugging),
                     summary = stringResource(id = R.string.enable_web_debugging_summary),
@@ -215,14 +216,13 @@ fun SettingScreen() {
                 }
             }
 
-            // Check Update
             var checkUpdate by rememberSaveable {
                 mutableStateOf(
                     prefs.getBoolean("check_update", true)
                 )
             }
 
-            SwitchItem(
+            Win98SwitchItem(
                 icon = Icons.Filled.Update,
                 title = stringResource(id = R.string.settings_check_update),
                 summary = stringResource(id = R.string.settings_check_update_summary),
@@ -232,13 +232,12 @@ fun SettingScreen() {
                 checkUpdate = it
             }
 
-            // Night Mode Follow System
             var nightFollowSystem by rememberSaveable {
                 mutableStateOf(
                     prefs.getBoolean("night_mode_follow_sys", true)
                 )
             }
-            SwitchItem(
+            Win98SwitchItem(
                 icon = Icons.Filled.InvertColors,
                 title = stringResource(id = R.string.settings_night_mode_follow_sys),
                 summary = stringResource(id = R.string.settings_night_mode_follow_sys_summary),
@@ -249,14 +248,13 @@ fun SettingScreen() {
                 refreshTheme.value = true
             }
 
-            // Custom Night Theme Switch
             if (!nightFollowSystem) {
                 var nightThemeEnabled by rememberSaveable {
                     mutableStateOf(
                         prefs.getBoolean("night_mode_enabled", false)
                     )
                 }
-                SwitchItem(
+                Win98SwitchItem(
                     icon = Icons.Filled.DarkMode,
                     title = stringResource(id = R.string.settings_night_theme_enabled),
                     checked = nightThemeEnabled
@@ -267,106 +265,48 @@ fun SettingScreen() {
                 }
             }
 
-            // System dynamic color theme
-            val isDynamicColorSupport = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-            if (isDynamicColorSupport) {
-                var useSystemDynamicColor by rememberSaveable {
-                    mutableStateOf(
-                        prefs.getBoolean("use_system_color_theme", true)
-                    )
-                }
-                SwitchItem(
-                    icon = Icons.Filled.ColorLens,
-                    title = stringResource(id = R.string.settings_use_system_color_theme),
-                    summary = stringResource(id = R.string.settings_use_system_color_theme_summary),
-                    checked = useSystemDynamicColor
-                ) {
-                    prefs.edit { putBoolean("use_system_color_theme", it) }
-                    useSystemDynamicColor = it
-                    refreshTheme.value = true
-                }
-
-                if (!useSystemDynamicColor) {
-                    ListItem(headlineContent = {
-                        Text(text = stringResource(id = R.string.settings_custom_color_theme))
-                    }, modifier = Modifier.clickable {
-                        showThemeChooseDialog.value = true
-                    }, supportingContent = {
-                        val colorMode = prefs.getString("custom_color", "blue")
-                        Text(
-                            text = stringResource(colorNameToString(colorMode.toString())),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.outline
-                        )
-                    }, leadingContent = { Icon(Icons.Filled.FormatColorFill, null) })
-
-                }
-            } else {
-                ListItem(headlineContent = {
-                    Text(text = stringResource(id = R.string.settings_custom_color_theme))
-                }, modifier = Modifier.clickable {
-                    showThemeChooseDialog.value = true
-                }, supportingContent = {
-                    val colorMode = prefs.getString("custom_color", "blue")
-                    Text(
-                        text = stringResource(colorNameToString(colorMode.toString())),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                }, leadingContent = { Icon(Icons.Filled.FormatColorFill, null) })
-            }
-
-            // su path
             if (kPatchReady) {
-                ListItem(
-                    leadingContent = {
-                        Icon(
-                            Icons.Filled.Commit, stringResource(id = R.string.setting_reset_su_path)
-                        )
-                    },
-                    supportingContent = {},
-                    headlineContent = { Text(stringResource(id = R.string.setting_reset_su_path)) },
-                    modifier = Modifier.clickable {
+                Win98SettingsItem(
+                    icon = Icons.Filled.Commit,
+                    title = stringResource(id = R.string.setting_reset_su_path),
+                    onClick = {
                         showResetSuPathDialog.value = true
-                    })
+                    }
+                )
             }
 
-            // language
-            ListItem(headlineContent = {
-                Text(text = stringResource(id = R.string.settings_app_language))
-            }, modifier = Modifier.clickable {
-                showLanguageDialog.value = true
-            }, supportingContent = {
-                Text(text = AppCompatDelegate.getApplicationLocales()[0]?.displayLanguage?.replaceFirstChar {
+            Win98SettingsItem(
+                icon = Icons.Filled.Translate,
+                title = stringResource(id = R.string.settings_app_language),
+                summary = AppCompatDelegate.getApplicationLocales()[0]?.displayLanguage?.replaceFirstChar {
                     if (it.isLowerCase()) it.titlecase(
                         Locale.getDefault()
                     ) else it.toString()
                 } ?: stringResource(id = R.string.system_default),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.outline)
-            }, leadingContent = { Icon(Icons.Filled.Translate, null) })
+                onClick = {
+                    showLanguageDialog.value = true
+                }
+            )
 
-            // log
-            ListItem(
-                leadingContent = {
-                    Icon(
-                        Icons.Filled.BugReport, stringResource(id = R.string.send_log)
-                    )
-                },
-                headlineContent = { Text(stringResource(id = R.string.send_log)) },
-                modifier = Modifier.clickable {
+            Win98SettingsItem(
+                icon = Icons.Filled.BugReport,
+                title = stringResource(id = R.string.send_log),
+                onClick = {
                     showLogBottomSheet = true
-                })
+                }
+            )
+
             if (showLogBottomSheet) {
                 ModalBottomSheet(
                     onDismissRequest = { showLogBottomSheet = false },
                     contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
+                    containerColor = Win98Colors.Background,
+                    shape = RectangleShape,
                     content = {
                         Row(
                             modifier = Modifier
                                 .padding(10.dp)
                                 .align(Alignment.CenterHorizontally)
-
                         ) {
                             Box {
                                 Column(
@@ -385,7 +325,8 @@ fun SettingScreen() {
                                     Icon(
                                         Icons.Filled.Save,
                                         contentDescription = null,
-                                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                                        tint = Win98Colors.WindowText
                                     )
                                     Text(
                                         text = stringResource(id = R.string.save_log),
@@ -395,11 +336,10 @@ fun SettingScreen() {
                                                 alignment = LineHeightStyle.Alignment.Center,
                                                 trim = LineHeightStyle.Trim.None
                                             )
-                                        }
-
+                                        },
+                                        color = Win98Colors.WindowText
                                     )
                                 }
-
                             }
                             Box {
                                 Column(
@@ -433,11 +373,13 @@ fun SettingScreen() {
                                                 )
                                                 showLogBottomSheet = false
                                             }
-                                        }) {
+                                        }
+                                ) {
                                     Icon(
                                         Icons.Filled.Share,
                                         contentDescription = null,
-                                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                                        tint = Win98Colors.WindowText
                                     )
                                     Text(
                                         text = stringResource(id = R.string.send_log),
@@ -447,97 +389,141 @@ fun SettingScreen() {
                                                 alignment = LineHeightStyle.Alignment.Center,
                                                 trim = LineHeightStyle.Trim.None
                                             )
-                                        }
-
+                                        },
+                                        color = Win98Colors.WindowText
                                     )
                                 }
-
                             }
                         }
                         NavigationBarsSpacer()
                     })
             }
-
-
         }
-
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ThemeChooseDialog(showDialog: MutableState<Boolean>) {
-    val prefs = APApplication.sharedPreferences
+fun Win98SwitchItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    title: String,
+    summary: String? = null,
+    checked: Boolean,
+    enabled: Boolean = true,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
 
-    BasicAlertDialog(
-        onDismissRequest = { showDialog.value = false }, properties = DialogProperties(
-            decorFitsSystemWindows = true,
-            usePlatformDefaultWidth = false,
-        )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .drawBehind { drawRect(Win98Colors.Background) }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
+                enabled = enabled,
+                role = Role.Switch,
+                onClick = { onCheckedChange(!checked) }
+            )
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Surface(
-            modifier = Modifier
-                .width(310.dp)
-                .wrapContentHeight(),
-            shape = RoundedCornerShape(30.dp),
-            tonalElevation = AlertDialogDefaults.TonalElevation,
-            color = AlertDialogDefaults.containerColor,
+        if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = if (enabled) Win98Colors.WindowText else Win98Colors.GrayText
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+        }
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center
         ) {
-            LazyColumn {
-                items(colorsList()) {
-                    ListItem(
-                        headlineContent = { Text(text = stringResource(it.nameId)) },
-                        modifier = Modifier.clickable {
-                            showDialog.value = false
-                            prefs.edit { putString("custom_color", it.name) }
-                            refreshTheme.value = true
-                        })
-                }
-
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                color = if (enabled) Win98Colors.WindowText else Win98Colors.GrayText
+            )
+            if (summary != null) {
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Win98Colors.GrayText
+                )
             }
+        }
 
-            val dialogWindowProvider = LocalView.current.parent as DialogWindowProvider
-            APDialogBlurBehindUtils.setupWindowBlurListener(dialogWindowProvider.window)
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(
+            modifier = Modifier
+                .win98InsetBorder(borderWidth = 1.dp)
+                .drawBehind { drawRect(Win98Colors.Surface) }
+                .size(16.dp)
+                .clickable(enabled = enabled) { onCheckedChange(!checked) },
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (checked) {
+                Text(
+                    text = "\u2713",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Win98Colors.WindowText
+                )
+            }
         }
     }
-
-}
-
-private data class APColor(
-    val name: String, @param:StringRes val nameId: Int
-)
-
-private fun colorsList(): List<APColor> {
-    return listOf(
-        APColor("amber", R.string.amber_theme),
-        APColor("blue_grey", R.string.blue_grey_theme),
-        APColor("blue", R.string.blue_theme),
-        APColor("brown", R.string.brown_theme),
-        APColor("cyan", R.string.cyan_theme),
-        APColor("deep_orange", R.string.deep_orange_theme),
-        APColor("deep_purple", R.string.deep_purple_theme),
-        APColor("green", R.string.green_theme),
-        APColor("indigo", R.string.indigo_theme),
-        APColor("light_blue", R.string.light_blue_theme),
-        APColor("light_green", R.string.light_green_theme),
-        APColor("lime", R.string.lime_theme),
-        APColor("orange", R.string.orange_theme),
-        APColor("pink", R.string.pink_theme),
-        APColor("purple", R.string.purple_theme),
-        APColor("red", R.string.red_theme),
-        APColor("sakura", R.string.sakura_theme),
-        APColor("teal", R.string.teal_theme),
-        APColor("yellow", R.string.yellow_theme),
-    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp)
+    ) {
+        Spacer(modifier = Modifier.height(0.dp))
+    }
 }
 
 @Composable
-private fun colorNameToString(colorName: String): Int {
-    return colorsList().find { it.name == colorName }?.nameId ?: R.string.blue_theme
-}
-
-val suPathChecked: (path: String) -> Boolean = {
-    it.startsWith("/") && it.trim().length > 1
+fun Win98SettingsItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    summary: String? = null,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .drawBehind { drawRect(Win98Colors.Background) }
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = Win98Colors.WindowText
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
+                color = Win98Colors.WindowText
+            )
+            if (summary != null) {
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Win98Colors.GrayText
+                )
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -545,66 +531,108 @@ val suPathChecked: (path: String) -> Boolean = {
 fun ResetSUPathDialog(showDialog: MutableState<Boolean>) {
     val context = LocalContext.current
     var suPath by remember { mutableStateOf(Natives.suPath()) }
-    BasicAlertDialog(
-        onDismissRequest = { showDialog.value = false }, properties = DialogProperties(
+    AlertDialog(
+        onDismissRequest = { showDialog.value = false },
+        properties = DialogProperties(
             decorFitsSystemWindows = true,
             usePlatformDefaultWidth = false,
-        )
-    ) {
-        Surface(
-            modifier = Modifier
-                .width(310.dp)
-                .wrapContentHeight(),
-            shape = RoundedCornerShape(30.dp),
-            tonalElevation = AlertDialogDefaults.TonalElevation,
-            color = AlertDialogDefaults.containerColor,
+        ),
+        shape = RectangleShape,
+        containerColor = Win98Colors.Background,
+        titleContentColor = Win98Colors.WindowText,
+        textContentColor = Win98Colors.WindowText,
+        confirmButton = {
+            Win98Button(onClick = {
+                showDialog.value = false
+                val success = Natives.resetSuPath(suPath)
+                Toast.makeText(
+                    context,
+                    if (success) R.string.success else R.string.failure,
+                    Toast.LENGTH_SHORT
+                ).show()
+                rootShellForResult("echo $suPath > ${APApplication.SU_PATH_FILE}")
+            }, enabled = suPathChecked(suPath)) {
+                Text(stringResource(id = android.R.string.ok), fontSize = 12.sp)
+            }
+        },
+        dismissButton = {
+            Win98Button(onClick = { showDialog.value = false }) {
+                Text(stringResource(id = android.R.string.cancel), fontSize = 12.sp)
+            }
+        },
+        title = {
+            Text(
+                text = stringResource(id = R.string.setting_reset_su_path),
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            OutlinedTextField(
+                value = suPath,
+                onValueChange = { suPath = it },
+                label = { Text(stringResource(id = R.string.setting_reset_su_new_path)) },
+                visualTransformation = VisualTransformation.None,
+                shape = RectangleShape,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Win98Colors.TitleBar,
+                    unfocusedBorderColor = Win98Colors.ButtonShadow,
+                    focusedContainerColor = Win98Colors.Surface,
+                    unfocusedContainerColor = Win98Colors.Surface,
+                    focusedTextColor = Win98Colors.WindowText,
+                    unfocusedTextColor = Win98Colors.WindowText,
+                    cursorColor = Win98Colors.WindowText
+                )
+            )
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LanguageDialog(showLanguageDialog: MutableState<Boolean>) {
+    val languages = stringArrayResource(id = R.array.languages)
+    val languagesValues = stringArrayResource(id = R.array.languages_values)
+
+    if (showLanguageDialog.value) {
+        BasicAlertDialog(
+            onDismissRequest = { showLanguageDialog.value = false }
         ) {
-            Column(modifier = Modifier.padding(PaddingValues(all = 24.dp))) {
-                Box(
-                    Modifier
-                        .padding(PaddingValues(bottom = 16.dp))
-                        .align(Alignment.Start)
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.setting_reset_su_path),
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                }
-                Box(
-                    Modifier
-                        .weight(weight = 1f, fill = false)
-                        .padding(PaddingValues(bottom = 12.dp))
-                        .align(Alignment.Start)
-                ) {
-                    OutlinedTextField(
-                        value = suPath,
-                        onValueChange = {
-                            suPath = it
-                        },
-                        label = { Text(stringResource(id = R.string.setting_reset_su_new_path)) },
-                        visualTransformation = VisualTransformation.None,
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(onClick = { showDialog.value = false }) {
-
-                        Text(stringResource(id = android.R.string.cancel))
-                    }
-
-                    Button(enabled = suPathChecked(suPath), onClick = {
-                        showDialog.value = false
-                        val success = Natives.resetSuPath(suPath)
-                        Toast.makeText(
-                            context,
-                            if (success) R.string.success else R.string.failure,
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        rootShellForResult("echo $suPath > ${APApplication.SU_PATH_FILE}")
-                    }) {
-                        Text(stringResource(id = android.R.string.ok))
+            Column(
+                modifier = Modifier
+                    .width(200.dp)
+                    .wrapContentHeight()
+                    .win98OutsetBorder(borderWidth = 2.dp)
+                    .drawBehind { drawRect(Win98Colors.Background) }
+            ) {
+                Win98TitleBar(title = "Language")
+                LazyColumn(modifier = Modifier.padding(4.dp)) {
+                    itemsIndexed(languages) { index, item ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    showLanguageDialog.value = false
+                                    if (index == 0) {
+                                        AppCompatDelegate.setApplicationLocales(
+                                            LocaleListCompat.getEmptyLocaleList()
+                                        )
+                                    } else {
+                                        AppCompatDelegate.setApplicationLocales(
+                                            LocaleListCompat.forLanguageTags(
+                                                languagesValues[index]
+                                            )
+                                        )
+                                    }
+                                }
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = item,
+                                fontSize = 12.sp,
+                                color = Win98Colors.WindowText
+                            )
+                        }
                     }
                 }
             }
@@ -614,50 +642,6 @@ fun ResetSUPathDialog(showDialog: MutableState<Boolean>) {
     }
 }
 
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun LanguageDialog(showLanguageDialog: MutableState<Boolean>) {
-
-    val languages = stringArrayResource(id = R.array.languages)
-    val languagesValues = stringArrayResource(id = R.array.languages_values)
-
-    if (showLanguageDialog.value) {
-        BasicAlertDialog(
-            onDismissRequest = { showLanguageDialog.value = false }
-        ) {
-            Surface(
-                modifier = Modifier
-                    .width(150.dp)
-                    .wrapContentHeight(),
-                shape = RoundedCornerShape(28.dp),
-                tonalElevation = AlertDialogDefaults.TonalElevation,
-                color = AlertDialogDefaults.containerColor,
-            ) {
-                LazyColumn {
-                    itemsIndexed(languages) { index, item ->
-                        ListItem(
-                            headlineContent = { Text(item) },
-                            modifier = Modifier.clickable {
-                                showLanguageDialog.value = false
-                                if (index == 0) {
-                                    AppCompatDelegate.setApplicationLocales(
-                                        LocaleListCompat.getEmptyLocaleList()
-                                    )
-                                } else {
-                                    AppCompatDelegate.setApplicationLocales(
-                                        LocaleListCompat.forLanguageTags(
-                                            languagesValues[index]
-                                        )
-                                    )
-                                }
-                            }
-                        )
-                    }
-                }
-            }
-            val dialogWindowProvider = LocalView.current.parent as DialogWindowProvider
-            APDialogBlurBehindUtils.setupWindowBlurListener(dialogWindowProvider.window)
-        }
-    }
+val suPathChecked: (path: String) -> Boolean = {
+    it.startsWith("/") && it.trim().length > 1
 }

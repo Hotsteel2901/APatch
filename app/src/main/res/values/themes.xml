@@ -3,6 +3,9 @@
 
     <style name="Theme.APatch" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="o_mr1">shortEdges</item>
+        <item name="android:windowBackground">@color/win98_background</item>
+        <item name="android:statusBarColor">@color/win98_titlebar</item>
+        <item name="android:navigationBarColor">@color/win98_silver</item>
     </style>
 
     <style name="Theme.Splash" parent="Theme.SplashScreen">

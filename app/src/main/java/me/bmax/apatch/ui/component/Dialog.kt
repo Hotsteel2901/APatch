@@ -8,12 +8,15 @@ import android.text.method.LinkMovementMethod
 import android.util.Log
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -39,10 +42,13 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -61,6 +67,10 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.parcelize.Parcelize
+import me.bmax.apatch.ui.theme.Win98Button
+import me.bmax.apatch.ui.theme.Win98Colors
+import me.bmax.apatch.ui.theme.Win98TitleBar
+import me.bmax.apatch.ui.theme.win98OutsetBorder
 import me.bmax.apatch.util.ui.APDialogBlurBehindUtils.Companion.setupWindowBlurListener
 import kotlin.coroutines.resume
 
@@ -428,12 +438,19 @@ private fun LoadingDialog() {
         )
     ) {
         Surface(
-            modifier = Modifier.size(100.dp), shape = RoundedCornerShape(8.dp)
+            modifier = Modifier.size(120.dp),
+            shape = RectangleShape,
+            color = Win98Colors.Background,
+            border = BorderStroke(2.dp, Win98Colors.ButtonHighlight)
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
+            Column(
+                modifier = Modifier.padding(12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = Win98Colors.TitleBar)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Loading...", fontSize = 11.sp, color = Win98Colors.WindowText)
             }
         }
         val dialogWindowProvider = LocalView.current.parent as DialogWindowProvider
@@ -454,51 +471,46 @@ private fun ConfirmDialog(visuals: ConfirmDialogVisuals, confirm: () -> Unit, di
             securePolicy = SecureFlagPolicy.SecureOff
         )
     ) {
-        Surface(
+        Column(
             modifier = Modifier
                 .width(320.dp)
-                .wrapContentHeight(),
-            shape = RoundedCornerShape(20.dp),
-            tonalElevation = AlertDialogDefaults.TonalElevation,
-            color = AlertDialogDefaults.containerColor,
+                .wrapContentHeight()
+                .win98OutsetBorder(borderWidth = 2.dp)
+                .drawBehind { drawRect(Win98Colors.Background) }
         ) {
-            Column(modifier = Modifier.padding(PaddingValues(all = 24.dp))) {
-                Box(
-                    Modifier
-                        .padding(PaddingValues(bottom = 16.dp))
-                        .align(Alignment.Start)
-                ) {
-                    Text(text = visuals.title, style = MaterialTheme.typography.headlineSmall)
-                }
+            Win98TitleBar(title = visuals.title, showCloseButton = true, onClose = dismiss)
+            Column(modifier = Modifier.padding(PaddingValues(all = 12.dp))) {
                 Box(
                     Modifier
                         .weight(weight = 1f, fill = false)
-                        .padding(PaddingValues(bottom = 24.dp))
-                        .align(Alignment.Start)
+                        .padding(PaddingValues(bottom = 12.dp))
                 ) {
-
                     if (visuals.isMarkdown) {
                         MarkdownContent(content = visuals.content)
                     } else {
-                        Text(text = visuals.content, style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            text = visuals.content,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Win98Colors.WindowText
+                        )
                     }
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    TextButton(onClick = dismiss) {
-                        Text(text = visuals.dismiss ?: stringResource(id = android.R.string.cancel))
+                    Win98Button(onClick = dismiss) {
+                        Text(text = visuals.dismiss ?: stringResource(id = android.R.string.cancel), fontSize = 12.sp)
                     }
-
-                    TextButton(onClick = confirm) {
-                        Text(text = visuals.confirm ?: stringResource(id = android.R.string.ok))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Win98Button(onClick = confirm) {
+                        Text(text = visuals.confirm ?: stringResource(id = android.R.string.ok), fontSize = 12.sp)
                     }
                 }
             }
-            val dialogWindowProvider = LocalView.current.parent as DialogWindowProvider
-            setupWindowBlurListener(dialogWindowProvider.window)
         }
+        val dialogWindowProvider = LocalView.current.parent as DialogWindowProvider
+        setupWindowBlurListener(dialogWindowProvider.window)
     }
 
 }

@@ -5,7 +5,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -16,62 +15,68 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.bmax.apatch.R
+import me.bmax.apatch.ui.theme.Win98Button
+import me.bmax.apatch.ui.theme.Win98Colors
 
 @Composable
 fun ModuleUpdateButton(
     onClick: () -> Unit
-) = FilledTonalButton(
-    onClick = onClick, enabled = true, contentPadding = PaddingValues(12.dp)
+) = Win98Button(
+    onClick = onClick, enabled = true, contentPadding = PaddingValues(8.dp)
 ) {
     Icon(
-        modifier = Modifier.size(20.dp),
+        modifier = Modifier.size(18.dp),
         painter = painterResource(id = R.drawable.device_mobile_down),
-        contentDescription = stringResource(id = R.string.apm_update)
+        contentDescription = stringResource(id = R.string.apm_update),
+        tint = Win98Colors.WindowText
     )
 }
 
 @Composable
 fun ModuleRemoveButton(
     enabled: Boolean, onClick: () -> Unit
-) = FilledTonalButton(
-    onClick = onClick, enabled = enabled, contentPadding = PaddingValues(12.dp)
+) = Win98Button(
+    onClick = onClick, enabled = enabled, contentPadding = PaddingValues(8.dp)
 ) {
     Icon(
-        modifier = Modifier.size(20.dp),
+        modifier = Modifier.size(18.dp),
         painter = painterResource(id = R.drawable.trash),
-        contentDescription = stringResource(id = R.string.apm_remove)
+        contentDescription = stringResource(id = R.string.apm_remove),
+        tint = if (enabled) Win98Colors.WindowText else Win98Colors.GrayText
     )
 }
 
 @Composable
 fun ModuleUndoRemoveButton(
     enabled: Boolean, onClick: () -> Unit
-) = FilledTonalButton(
-    onClick = onClick, enabled = enabled, contentPadding = PaddingValues(12.dp)
+) = Win98Button(
+    onClick = onClick, enabled = enabled, contentPadding = PaddingValues(8.dp)
 ) {
     Icon(
-        modifier = Modifier.size(20.dp),
+        modifier = Modifier.size(18.dp),
         painter = painterResource(id = R.drawable.undo),
-        contentDescription = stringResource(id = R.string.apm_undo)
+        contentDescription = stringResource(id = R.string.apm_undo),
+        tint = if (enabled) Win98Colors.WindowText else Win98Colors.GrayText
     )
 }
 
 @Composable
 fun KPModuleRemoveButton(
     enabled: Boolean, onClick: () -> Unit
-) = FilledTonalButton(
-    onClick = onClick, enabled = enabled, contentPadding = PaddingValues(12.dp)
+) = Win98Button(
+    onClick = onClick, enabled = enabled, contentPadding = PaddingValues(8.dp)
 ) {
     Icon(
-        modifier = Modifier.size(20.dp),
+        modifier = Modifier.size(18.dp),
         painter = painterResource(id = R.drawable.trash),
-        contentDescription = stringResource(id = R.string.kpm_unload)
+        contentDescription = stringResource(id = R.string.kpm_unload),
+        tint = if (enabled) Win98Colors.WindowText else Win98Colors.GrayText
     )
 }
 
 @Composable
 fun ModuleStateIndicator(
-    @DrawableRes icon: Int, color: Color = MaterialTheme.colorScheme.outline
+    @DrawableRes icon: Int, color: Color = Win98Colors.GrayText
 ) {
     Image(
         modifier = Modifier.requiredSize(150.dp),

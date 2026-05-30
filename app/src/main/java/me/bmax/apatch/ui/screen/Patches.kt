@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
@@ -41,10 +40,8 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -54,8 +51,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -67,14 +62,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.app.ActivityCompat
@@ -87,6 +86,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.component.SwitchItem
+import me.bmax.apatch.ui.theme.Win98Button
+import me.bmax.apatch.ui.theme.Win98Colors
+import me.bmax.apatch.ui.theme.Win98TitleBar
+import me.bmax.apatch.ui.theme.win98OutsetBorder
 import me.bmax.apatch.ui.viewmodel.KPModel
 import me.bmax.apatch.ui.viewmodel.PatchesViewModel
 import me.bmax.apatch.util.Version
@@ -130,12 +133,12 @@ fun Patches(mode: PatchesViewModel.PatchMode) {
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
+                .drawBehind { drawRect(Win98Colors.Background) }
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             val context = LocalContext.current
 
-            // request permissions
             val permissions = arrayOf(
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 Manifest.permission.READ_EXTERNAL_STORAGE
@@ -157,14 +160,11 @@ fun Patches(mode: PatchesViewModel.PatchMode) {
 
             if (mode == PatchesViewModel.PatchMode.PATCH_ONLY && selectedBootImage != null && viewModel.kimgInfo.banner.isEmpty()) {
                 viewModel.copyAndParseBootimg(selectedBootImage!!)
-                // Fix endless loop. It's not normal if (parse done && working thread is not working) but banner still null
-                // Leave user re-choose
                 if (!viewModel.running && viewModel.kimgInfo.banner.isEmpty()) {
                     selectedBootImage = null
                 }
             }
 
-            // select boot.img
             if (mode == PatchesViewModel.PatchMode.PATCH_ONLY && viewModel.kimgInfo.banner.isEmpty()) {
                 SelectFileButton(
                     text = stringResource(id = R.string.patch_select_bootimg_btn),
@@ -184,12 +184,11 @@ fun Patches(mode: PatchesViewModel.PatchMode) {
             }
 
             if (mode != PatchesViewModel.PatchMode.UNPATCH && viewModel.kimgInfo.banner.isNotEmpty()) {
-                ElevatedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
-                    ),
-                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .win98OutsetBorder(borderWidth = 1.dp)
+                        .drawBehind { drawRect(Win98Colors.Background) }
                 ) {
                     SwitchItem(
                         icon = Icons.Default.Key,
@@ -214,7 +213,6 @@ fun Patches(mode: PatchesViewModel.PatchMode) {
                 }
             }
 
-            // existed extras
             if (mode == PatchesViewModel.PatchMode.PATCH_AND_INSTALL || mode == PatchesViewModel.PatchMode.INSTALL_TO_NEXT_SLOT) {
                 viewModel.existedExtras.forEach(action = {
                     ExtraItem(extra = it, true, onDelete = {
@@ -223,7 +221,6 @@ fun Patches(mode: PatchesViewModel.PatchMode) {
                 })
             }
 
-            // add new extras
             if (mode != PatchesViewModel.PatchMode.UNPATCH) {
                 viewModel.newExtras.forEach(action = {
                     ExtraItem(extra = it, false, onDelete = {
@@ -234,7 +231,6 @@ fun Patches(mode: PatchesViewModel.PatchMode) {
                 })
             }
 
-            // add new KPM
             if (!viewModel.patching && !viewModel.patchdone && mode != PatchesViewModel.PatchMode.UNPATCH) {
                 SelectFileButton(
                     text = stringResource(id = R.string.patch_embed_kpm_btn),
@@ -245,9 +241,7 @@ fun Patches(mode: PatchesViewModel.PatchMode) {
                 )
             }
 
-            // do patch, update, unpatch
             if (!viewModel.patching && !viewModel.patchdone) {
-                // patch start
                 if (mode != PatchesViewModel.PatchMode.UNPATCH) {
                     val isKeyReady = !needKey || viewModel.superkey.isNotEmpty()
                     if (isKeyReady) {
@@ -256,13 +250,11 @@ fun Patches(mode: PatchesViewModel.PatchMode) {
                         }
                     }
                 }
-                // unpatch
                 if (mode == PatchesViewModel.PatchMode.UNPATCH && viewModel.kimgInfo.banner.isNotEmpty()) {
                     StartButton(stringResource(id = R.string.patch_start_unpatch_btn)) { viewModel.doUnpatch() }
                 }
             }
 
-            // patch log
             if (viewModel.patching || viewModel.patchdone) {
                 SelectionContainer {
                     Text(
@@ -280,7 +272,6 @@ fun Patches(mode: PatchesViewModel.PatchMode) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // loading progress
             if (viewModel.running) {
                 Box(
                     modifier = Modifier
@@ -307,12 +298,11 @@ private fun StartButton(text: String, onClick: () -> Unit) {
             .fillMaxWidth(),
         horizontalAlignment = Alignment.End
     ) {
-        Button(
+        Win98Button(
             onClick = onClick,
-            content = {
-                Text(text = text)
-            }
-        )
+        ) {
+            Text(text = text, fontSize = 12.sp)
+        }
     }
 }
 
@@ -333,9 +323,9 @@ private fun ExtraConfigDialog(kpmInfo: KPModel.KPMInfo, onDismiss: () -> Unit) {
             modifier = Modifier
                 .width(310.dp)
                 .wrapContentHeight(),
-            shape = RoundedCornerShape(30.dp),
+            shape = RectangleShape,
             tonalElevation = AlertDialogDefaults.TonalElevation,
-            color = AlertDialogDefaults.containerColor,
+            color = Win98Colors.Background,
         ) {
             Column(modifier = Modifier.padding(PaddingValues(all = 24.dp))) {
                 Text(
@@ -372,8 +362,8 @@ private fun ExtraConfigDialog(kpmInfo: KPModel.KPMInfo, onDismiss: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    TextButton(onClick = onDismiss) {
-                        Text(stringResource(id = android.R.string.ok))
+                    Win98Button(onClick = onDismiss) {
+                        Text(stringResource(id = android.R.string.ok), fontSize = 12.sp)
                     }
                 }
             }
@@ -391,10 +381,11 @@ private fun ExtraItem(extra: KPModel.IExtraInfo, existed: Boolean, onDelete: () 
         ExtraConfigDialog(extra, onDismiss = { showConfigDialog = false })
     }
 
-    ElevatedCard(
-        colors = CardDefaults.elevatedCardColors(containerColor = run {
-            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 1f)
-        }),
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .win98OutsetBorder(borderWidth = 1.dp)
+            .drawBehind { drawRect(Win98Colors.Background) }
     ) {
         Column(
             modifier = Modifier
@@ -409,6 +400,7 @@ private fun ExtraItem(extra: KPModel.IExtraInfo, existed: Boolean, onDelete: () 
                     ) +
                             " " + extra.type.toString().uppercase(),
                     style = MaterialTheme.typography.bodyLarge,
+                    color = Win98Colors.WindowText,
                     modifier = Modifier
                         .weight(1f)
                         .wrapContentWidth(Alignment.CenterHorizontally)
@@ -419,7 +411,8 @@ private fun ExtraItem(extra: KPModel.IExtraInfo, existed: Boolean, onDelete: () 
                         contentDescription = "Config",
                         modifier = Modifier
                             .padding(end = 8.dp)
-                            .clickable { showConfigDialog = true }
+                            .clickable { showConfigDialog = true },
+                        tint = Win98Colors.WindowText
                     )
                 }
                 Icon(
@@ -427,29 +420,36 @@ private fun ExtraItem(extra: KPModel.IExtraInfo, existed: Boolean, onDelete: () 
                     contentDescription = "Delete",
                     modifier = Modifier
                         .padding(end = 8.dp)
-                        .clickable { onDelete() })
+                        .clickable { onDelete() },
+                    tint = Win98Colors.WindowText
+                )
             }
             if (extra.type == KPModel.ExtraType.KPM) {
                 val kpmInfo: KPModel.KPMInfo = extra as KPModel.KPMInfo
                 Text(
                     text = "${stringResource(id = R.string.patch_item_extra_name) + " "} ${kpmInfo.name}",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Win98Colors.WindowText
                 )
                 Text(
                     text = "${stringResource(id = R.string.patch_item_extra_version) + " "} ${kpmInfo.version}",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Win98Colors.WindowText
                 )
                 Text(
                     text = "${stringResource(id = R.string.patch_item_extra_kpm_license) + " "} ${kpmInfo.license}",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Win98Colors.WindowText
                 )
                 Text(
                     text = "${stringResource(id = R.string.patch_item_extra_author) + " "} ${kpmInfo.author}",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Win98Colors.WindowText
                 )
                 Text(
                     text = "${stringResource(id = R.string.patch_item_extra_kpm_desciption) + " "} ${kpmInfo.description}",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Win98Colors.WindowText
                 )
             }
         }
@@ -462,10 +462,11 @@ private fun SetSuperKeyView(viewModel: PatchesViewModel) {
     var skey by remember { mutableStateOf(viewModel.superkey) }
     var showWarn by remember { mutableStateOf(!viewModel.checkSuperKeyValidation(skey)) }
     var keyVisible by remember { mutableStateOf(false) }
-    ElevatedCard(
-        colors = CardDefaults.elevatedCardColors(containerColor = run {
-            MaterialTheme.colorScheme.secondaryContainer
-        })
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .win98OutsetBorder(borderWidth = 1.dp)
+            .drawBehind { drawRect(Win98Colors.Background) }
     ) {
         Column(
             modifier = Modifier
@@ -479,13 +480,14 @@ private fun SetSuperKeyView(viewModel: PatchesViewModel) {
             ) {
                 Text(
                     text = stringResource(id = R.string.patch_item_skey),
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Win98Colors.WindowText
                 )
             }
             if (showWarn) {
                 Spacer(modifier = Modifier.height(3.dp))
                 Text(
-                    color = Color.Red,
+                    color = Win98Colors.ErrorBackground,
                     text = stringResource(id = R.string.patch_item_set_skey_label),
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -502,7 +504,7 @@ private fun SetSuperKeyView(viewModel: PatchesViewModel) {
                         label = { Text(stringResource(id = R.string.patch_set_superkey)) },
                         visualTransformation = if (keyVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        shape = RoundedCornerShape(50.0f),
+                        shape = RectangleShape,
                         onValueChange = {
                             skey = it
                             if (viewModel.checkSuperKeyValidation(it)) {
@@ -523,7 +525,7 @@ private fun SetSuperKeyView(viewModel: PatchesViewModel) {
                         Icon(
                             imageVector = if (keyVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                             contentDescription = null,
-                            tint = Color.Gray
+                            tint = Win98Colors.GrayText
                         )
                     }
                 }
@@ -535,10 +537,11 @@ private fun SetSuperKeyView(viewModel: PatchesViewModel) {
 @Composable
 private fun KernelPatchImageView(kpImgInfo: KPModel.KPImgInfo) {
     if (kpImgInfo.version.isEmpty()) return
-    ElevatedCard(
-        colors = CardDefaults.elevatedCardColors(containerColor = run {
-            MaterialTheme.colorScheme.secondaryContainer
-        })
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .win98OutsetBorder(borderWidth = 1.dp)
+            .drawBehind { drawRect(Win98Colors.Background) }
     ) {
         Column(
             modifier = Modifier
@@ -552,21 +555,25 @@ private fun KernelPatchImageView(kpImgInfo: KPModel.KPImgInfo) {
             ) {
                 Text(
                     text = stringResource(id = R.string.patch_item_kpimg),
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Win98Colors.WindowText
                 )
             }
             Text(
                 text = stringResource(id = R.string.patch_item_kpimg_version) + " " + Version.uInt2String(
                     kpImgInfo.version.substring(2).toUInt(16)
-                ), style = MaterialTheme.typography.bodyMedium
+                ), style = MaterialTheme.typography.bodyMedium,
+                color = Win98Colors.WindowText
             )
             Text(
                 text = stringResource(id = R.string.patch_item_kpimg_comile_time) + " " + kpImgInfo.compileTime,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = Win98Colors.WindowText
             )
             Text(
                 text = stringResource(id = R.string.patch_item_kpimg_config) + " " + kpImgInfo.config,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = Win98Colors.WindowText
             )
         }
     }
@@ -574,10 +581,11 @@ private fun KernelPatchImageView(kpImgInfo: KPModel.KPImgInfo) {
 
 @Composable
 private fun BootimgView(slot: String, boot: String) {
-    ElevatedCard(
-        colors = CardDefaults.elevatedCardColors(containerColor = run {
-            MaterialTheme.colorScheme.secondaryContainer
-        })
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .win98OutsetBorder(borderWidth = 1.dp)
+            .drawBehind { drawRect(Win98Colors.Background) }
     ) {
         Column(
             modifier = Modifier
@@ -591,18 +599,21 @@ private fun BootimgView(slot: String, boot: String) {
             ) {
                 Text(
                     text = stringResource(id = R.string.patch_item_bootimg),
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Win98Colors.WindowText
                 )
             }
             if (slot.isNotEmpty()) {
                 Text(
                     text = stringResource(id = R.string.patch_item_bootimg_slot) + " " + slot,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Win98Colors.WindowText
                 )
             }
             Text(
                 text = stringResource(id = R.string.patch_item_bootimg_dev) + " " + boot,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = Win98Colors.WindowText
             )
         }
     }
@@ -610,10 +621,11 @@ private fun BootimgView(slot: String, boot: String) {
 
 @Composable
 private fun KernelImageView(kImgInfo: KPModel.KImgInfo) {
-    ElevatedCard(
-        colors = CardDefaults.elevatedCardColors(containerColor = run {
-            MaterialTheme.colorScheme.secondaryContainer
-        })
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .win98OutsetBorder(borderWidth = 1.dp)
+            .drawBehind { drawRect(Win98Colors.Background) }
     ) {
         Column(
             modifier = Modifier
@@ -627,10 +639,11 @@ private fun KernelImageView(kImgInfo: KPModel.KImgInfo) {
             ) {
                 Text(
                     text = stringResource(id = R.string.patch_item_kernel),
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Win98Colors.WindowText
                 )
             }
-            Text(text = kImgInfo.banner, style = MaterialTheme.typography.bodyMedium)
+            Text(text = kImgInfo.banner, style = MaterialTheme.typography.bodyMedium, color = Win98Colors.WindowText)
         }
     }
 }
@@ -654,24 +667,26 @@ private fun SelectFileButton(text: String, onSelected: (data: Intent, uri: Uri) 
             .fillMaxWidth(),
         horizontalAlignment = Alignment.End
     ) {
-        Button(
+        Win98Button(
             onClick = {
                 val intent = Intent(Intent.ACTION_GET_CONTENT)
                 intent.type = "*/*"
                 selectFileLauncher.launch(intent)
             },
-            content = { Text(text = text) }
-        )
+        ) {
+            Text(text = text, fontSize = 12.sp)
+        }
     }
 }
 
 @Composable
 private fun ErrorView(error: String) {
     if (error.isEmpty()) return
-    ElevatedCard(
-        colors = CardDefaults.elevatedCardColors(containerColor = run {
-            MaterialTheme.colorScheme.error
-        })
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .win98OutsetBorder(borderWidth = 1.dp)
+            .drawBehind { drawRect(Win98Colors.ErrorBackground) }
     ) {
         Column(
             modifier = Modifier
@@ -681,19 +696,21 @@ private fun ErrorView(error: String) {
         ) {
             Text(
                 text = stringResource(id = R.string.patch_item_error),
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                color = Win98Colors.WindowText
             )
-            Text(text = error, style = MaterialTheme.typography.bodyMedium)
+            Text(text = error, style = MaterialTheme.typography.bodyMedium, color = Win98Colors.WindowText)
         }
     }
 }
 
 @Composable
 private fun PatchMode(mode: PatchesViewModel.PatchMode) {
-    ElevatedCard(
-        colors = CardDefaults.elevatedCardColors(containerColor = run {
-            MaterialTheme.colorScheme.secondaryContainer
-        })
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .win98OutsetBorder(borderWidth = 1.dp)
+            .drawBehind { drawRect(Win98Colors.Background) }
     ) {
         Column(
             modifier = Modifier
@@ -701,13 +718,12 @@ private fun PatchMode(mode: PatchesViewModel.PatchMode) {
                 .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = stringResource(id = mode.sId), style = MaterialTheme.typography.bodyLarge)
+            Text(text = stringResource(id = mode.sId), style = MaterialTheme.typography.bodyLarge, color = Win98Colors.WindowText)
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TopBar() {
-    TopAppBar(title = { Text(stringResource(R.string.patch_config_title)) })
+    Win98TitleBar(title = stringResource(R.string.patch_config_title))
 }
