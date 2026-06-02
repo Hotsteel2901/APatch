@@ -122,7 +122,7 @@ fun HomeScreen(navigator: DestinationsNavigator) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Spacer(Modifier.height(4.dp))
-            WarningCard()
+BackupWarningCard()
             KStatusCard(kpState, apState, navigator)
             if (kpState != APApplication.State.UNKNOWN_STATE && apState != APApplication.State.ANDROIDPATCH_INSTALLED) {
                 AStatusCard(apState)
@@ -565,7 +565,7 @@ private fun AStatusCard(apState: APApplication.State) {
 
 
 @Composable
-fun WarningCard() {
+fun BackupWarningCard() {
     var show by rememberSaveable { mutableStateOf(apApp.getBackupWarningState()) }
     if (show) {
         Column(
@@ -609,10 +609,12 @@ private fun getSystemVersion(): String {
 }
 
 private fun getDeviceInfo(): String {
+    val manufacturerStr = Build.MANUFACTURER.ifEmpty { "Unknown" }
+    val brandStr = Build.BRAND.ifEmpty { "Unknown" }
     var manufacturer =
-        Build.MANUFACTURER[0].uppercaseChar().toString() + Build.MANUFACTURER.substring(1)
-    if (!Build.BRAND.equals(Build.MANUFACTURER, ignoreCase = true)) {
-        manufacturer += " " + Build.BRAND[0].uppercaseChar() + Build.BRAND.substring(1)
+        manufacturerStr[0].uppercaseChar().toString() + manufacturerStr.substring(1)
+    if (!brandStr.equals(manufacturerStr, ignoreCase = true)) {
+        manufacturer += " " + brandStr[0].uppercaseChar() + brandStr.substring(1)
     }
     manufacturer += " " + Build.MODEL + " "
     return manufacturer
