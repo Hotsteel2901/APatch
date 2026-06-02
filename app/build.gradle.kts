@@ -106,6 +106,7 @@ android {
     }
 
     defaultConfig {
+        applicationId = "me.win98.Apatch"
         minSdk = androidMinSdkVersion
         targetSdk = androidTargetSdkVersion
         versionCode = managerVersionCode
