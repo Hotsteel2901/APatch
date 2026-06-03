@@ -220,7 +220,10 @@ class MainActivity : AppCompatActivity() {
 private fun Win98Taskbar(navController: NavHostController, visibleDestinations: Set<BottomBarDestination>) {
     val navigator = navController.rememberDestinationsNavigator()
 
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
+    ) {
         Row(
             modifier = Modifier
                 .win98Divider()
