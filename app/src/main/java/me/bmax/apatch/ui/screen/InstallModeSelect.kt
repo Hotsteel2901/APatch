@@ -10,8 +10,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -199,7 +204,10 @@ private fun SelectInstallMethod(
 
 @Composable
 private fun TopBar(onBack: () -> Unit = {}) {
-    Column(modifier = Modifier.drawBehind { drawRect(Win98Colors.TitleBar) }) {
+    Column(modifier = Modifier
+        .drawBehind { drawRect(Win98Colors.TitleBar) }
+        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
