@@ -140,7 +140,7 @@ fun KPModuleScreen(navigator: DestinationsNavigator) {
     }
 
     Scaffold(topBar = {
-        Win98TitleBar(title = stringResource(id = R.string.kpm))
+        Win98TitleBar(title = stringResource(id = R.string.kpm), applyTopInset = true)
     }, floatingActionButton = run {
         {
             val scope = rememberCoroutineScope()

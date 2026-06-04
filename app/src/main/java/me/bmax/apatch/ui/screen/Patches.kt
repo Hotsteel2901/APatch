@@ -725,5 +725,5 @@ private fun PatchMode(mode: PatchesViewModel.PatchMode) {
 
 @Composable
 private fun TopBar() {
-    Win98TitleBar(title = stringResource(R.string.patch_config_title))
+    Win98TitleBar(title = stringResource(R.string.patch_config_title), applyTopInset = true)
 }
