@@ -254,15 +254,22 @@ fun Win98TitleBar(
     modifier: Modifier = Modifier,
     active: Boolean = true,
     showCloseButton: Boolean = false,
-    onClose: (() -> Unit)? = null
+    onClose: (() -> Unit)? = null,
+    applyTopInset: Boolean = false
 ) {
     val titleBarColor = if (active) Win98Colors.TitleBar else Win98Colors.TitleBarInactive
+
+    val topInsetModifier = if (applyTopInset) {
+        Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+    } else {
+        Modifier
+    }
 
     Row(
         modifier = modifier
             .fillMaxWidth()
             .win98BgColor(titleBarColor)
-            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+            .then(topInsetModifier)
             .padding(start = 4.dp, top = 2.dp, end = 2.dp, bottom = 2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

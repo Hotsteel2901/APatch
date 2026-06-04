@@ -129,7 +129,7 @@ fun SettingScreen() {
 
     Scaffold(
         topBar = {
-            Win98TitleBar(title = stringResource(R.string.settings))
+            Win98TitleBar(title = stringResource(R.string.settings), applyTopInset = true)
         },
         snackbarHost = { SnackbarHost(snackBarHost) }
     ) { paddingValues ->
